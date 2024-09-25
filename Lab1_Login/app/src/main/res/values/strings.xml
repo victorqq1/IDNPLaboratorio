@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Lab1_Login</string>
+    <string name="title_activity_home">HomeActivity</string>
+</resources>
