@@ -48,19 +48,23 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String accountsData = readFile("cuentas.txt");
-                if (!accountsData.isEmpty()) {
-                    Gson gson = new Gson();
-                    AccountEntity[] accounts = gson.fromJson(accountsData, AccountEntity[].class);
+                //String accountsData = readFile("cuentas.txt");
+                //if (!accountsData.isEmpty()) {
+                    //Gson gson = new Gson();
+                    // AccountEntity[] accounts = gson.fromJson(accountsData, AccountEntity[].class);
 
-                    boolean found = false;
+                    //boolean found = false;
+                    /*
                     for (AccountEntity account : accounts) {
                         if (account.getUsername().equals(edtUsername.getText().toString()) && account.getPassword().equals(edtPassword.getText().toString())) {
                             Toast.makeText(getApplicationContext(),"Bienvenido " + account.getFirstname(),Toast.LENGTH_SHORT).show();
                             Log.d(TAG,"Bienvenido " + account.getFirstname());
-                            // Mostrar el mensaje en la misma actividad
-                            // Puedes actualizar la interfaz aquí, por ejemplo, con un TextView.
-                            binding.txtWelcome.setText("Bienvenido " + account.getFirstname());
+
+                            // Lanzar el HomeActivity
+                            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                            startActivity(intent);
+                            finish();
+
                             found = true;
                             break;
                         }
@@ -72,8 +76,14 @@ public class LoginActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(getApplicationContext(), "Archivo vacío", Toast.LENGTH_SHORT).show();
                 }
+                */
+                // Lanzar el HomeActivity
+                Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
+
 
 
 
