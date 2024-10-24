@@ -47,7 +47,7 @@ public class MapaFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-        // Configurar la configuración de OSMDroid
+        // Configuración de OSMDroid
         Configuration.getInstance().load(getContext(), PreferenceManager.getDefaultSharedPreferences(getContext()));
     }
 
