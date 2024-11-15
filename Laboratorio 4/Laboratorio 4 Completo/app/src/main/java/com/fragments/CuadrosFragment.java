@@ -1,18 +1,31 @@
 package com.fragments;
 
+import android.content.res.AssetManager;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
+import com.Edificacion;
+import com.EdificacionAdapter;
 import com.example.lab1_login.R;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,7 +33,8 @@ import java.util.List;
 public class CuadrosFragment extends Fragment {
 
     private RecyclerView recyclerView;
-    private CityAdapter adapter;
+    private EdificacionAdapter adapter;
+    private List<Edificacion> edificaciones;
 
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
@@ -55,56 +69,57 @@ public class CuadrosFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_cuadros, container, false);
 
+        // Inicializar datos
+        edificaciones = cargarEdificaciones();
+
         // Configurar RecyclerView
         recyclerView = view.findViewById(R.id.recyclerView);
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 3); // 3 columnas
-        recyclerView.setLayoutManager(gridLayoutManager);
-
-        // Lista de ciudades de Arequipa
-        List<String> cities = Arrays.asList("Arequipa", "Camana", "Caraveli", "Castilla", "Caylloma", "Condesuyos", "Islay", "La Unión");
-
-        // Crear y asignar el adaptador con la lista de ciudades
-        adapter = new CityAdapter(cities);
+        recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        adapter = new EdificacionAdapter(edificaciones);
         recyclerView.setAdapter(adapter);
+
+        // Configurar el filtro
+        EditText filterEditText = view.findViewById(R.id.filterEditText);
+        filterEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.filtrar(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
         return view;
     }
 
-    // Adaptador para manejar el RecyclerView
-    public class CityAdapter extends RecyclerView.Adapter<CityAdapter.CityViewHolder> {
-        private List<String> cities;
+    private List<Edificacion> cargarEdificaciones() {
+        try {
+            // Acceder a los archivos assets
+            AssetManager assetManager = requireContext().getAssets();
+            InputStream inputStream = assetManager.open("edificaciones.json");
 
-        public CityAdapter(List<String> cities) {
-            this.cities = cities;
-        }
+            // Convertir el InputStream en un String usando un BufferedReader
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
 
-        @Override
-        public CityViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            // Inflar un TextView para cada ciudad
-            View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
-            return new CityViewHolder(view);
-        }
+            // Usar Gson para parsear el JSON en una lista de objetos Edificacion
+            Gson gson = new Gson();
+            Type listType = new TypeToken<List<Edificacion>>(){}.getType();
+            List<Edificacion> edificaciones = gson.fromJson(inputStreamReader, listType);
 
-        @Override
-        public void onBindViewHolder(CityViewHolder holder, int position) {
-            // Asignar el nombre de la ciudad al TextView
-            String city = cities.get(position);
-            holder.cityTextView.setText(city);
-        }
-
-        @Override
-        public int getItemCount() {
-            return cities.size();
-        }
-
-        // ViewHolder para manejar el TextView de cada ciudad
-        public class CityViewHolder extends RecyclerView.ViewHolder {
-            public TextView cityTextView;
-
-            public CityViewHolder(View itemView) {
-                super(itemView);
-                cityTextView = itemView.findViewById(android.R.id.text1);
+            // Imprimir la lista de edificaciones en la consola
+            if (edificaciones != null) {
+                for (Edificacion edificacion : edificaciones) {
+                    Log.d("Edificacion", "Edificación: " + edificacion.toString());
+                }
             }
+            return edificaciones;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }

@@ -1,17 +1,30 @@
 package com.fragments;
 
+import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
 import androidx.fragment.app.Fragment;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.util.GeoPoint;
+
+import com.Edificacion;
 import com.example.lab1_login.R;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MapaFragment extends Fragment {
 
@@ -52,8 +65,7 @@ public class MapaFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflar el layout para este fragmento
         View view = inflater.inflate(R.layout.fragment_mapas, container, false);
 
@@ -68,25 +80,20 @@ public class MapaFragment extends Fragment {
         mapView.getController().setZoom(10);
         mapView.getController().setCenter(startPoint);
 
-        // Agregar un marcador
-        /*
-        Marker marker = new Marker(mapView);
-        marker.setPosition(startPoint);
-        marker.setIcon(getResources().getDrawable(R.drawable.ic_marker)); // Cambia esto por tu ícono de marcador
-        marker.setTitle("Arequipa"); // Título que se mostrará en el infowindow
-        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        mapView.getOverlays().add(marker);
+        // Cargar las edificaciones desde el archivo JSON
+        List<Edificacion> edificaciones = cargarEdificaciones();
 
-        // Mostrar infowindow al hacer clic en el marcador
-        marker.setOnMarkerClickListener((m, mapView1) -> {
-            m.showInfoWindow();
-            return true;
-        });
+        // Verificar si se cargaron correctamente las edificaciones
+        if (edificaciones != null) {
+            // Agregar los marcadores para las edificaciones al mapa
+            agregarMarcadores(edificaciones);
+        } else {
+            Toast.makeText(getContext(), "No se pudieron cargar las edificaciones", Toast.LENGTH_SHORT).show();
+        }
 
-
-        */
         return view;
     }
+
 
     @Override
     public void onResume() {
@@ -108,4 +115,59 @@ public class MapaFragment extends Fragment {
         // Limpiar el MapView al destruir el fragmento
         mapView.onDetach();
     }
+
+    private List<Edificacion> cargarEdificaciones() {
+        try {
+            // Acceder a los archivos assets
+            AssetManager assetManager = requireContext().getAssets();
+            InputStream inputStream = assetManager.open("edificaciones.json");
+
+            // Convertir el InputStream en un String usando InputStreamReader
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+
+            // Usar Gson para parsear el JSON en una lista de objetos Edificacion
+            Gson gson = new Gson();
+            Type listType = new TypeToken<List<Edificacion>>(){}.getType();
+            List<Edificacion> edificaciones = gson.fromJson(inputStreamReader, listType);
+
+            // Imprimir la lista de edificaciones (opcional, para depuración)
+            if (edificaciones != null) {
+                for (Edificacion edificacion : edificaciones) {
+                    // Aquí puedes realizar un Log si deseas imprimir las edificaciones
+                    // Log.d("Edificacion", "Edificación: " + edificacion.toString());
+                }
+            }
+
+            return edificaciones;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void agregarMarcadores(List<Edificacion> edificaciones) {
+        for (Edificacion edificacion : edificaciones) {
+            // Utiliza las coordenadas de cada edificación (aquí se asume que las coordenadas son correctas)
+            GeoPoint punto = new GeoPoint(edificacion.getLatitud(), edificacion.getLongitud());
+
+            // Crear marcador
+            Marker marcador = new Marker(mapView);
+            marcador.setPosition(punto);
+            marcador.setTitle(edificacion.getTitulo());
+            marcador.setSubDescription(edificacion.getDescripcion());
+
+            // Personaliza el ícono del marcador
+            //marcador.setIcon(getResources().getDrawable(R.drawable.ic_marker));
+
+            // Agregar el marcador al mapa
+            mapView.getOverlays().add(marcador);
+
+            // Configurar un infowindow que se muestre al hacer clic en el marcador
+            marcador.setOnMarkerClickListener((m, mapView1) -> {
+                m.showInfoWindow();  // Muestra la ventana de información
+                return true;  // Evita que se haga zoom
+            });
+        }
+    }
+
 }
